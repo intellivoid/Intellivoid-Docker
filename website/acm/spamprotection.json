@@ -1,0 +1,22 @@
+{
+    "file_type": "acm_json",
+    "file_version": "1.0.0.0",
+    "configurations": {
+        "Database": {
+            "Host": "172.17.0.1",
+            "Port": "3306",
+            "Username": "intellivoid",
+            "Password": "",
+            "Database": "spam_protection"
+        }
+    },
+    "schemas": {
+        "Database": {
+            "Host": "localhost",
+            "Port": "3306",
+            "Username": "admin",
+            "Password": "admin",
+            "Database": "spam_protection"
+        }
+    }
+}

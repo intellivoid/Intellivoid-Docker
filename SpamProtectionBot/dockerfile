@@ -1,0 +1,73 @@
+# Create a builder container 
+FROM alpine:latest AS builder
+# Build JEMalloc
+RUN apk add build-base && wget -O - https://github.com/jemalloc/jemalloc/releases/download/5.2.1/jemalloc-5.2.1.tar.bz2 | tar -xj && \
+	cd jemalloc-5.2.1 && ./configure && make -j$(nproc --all) && make install && cd .. && rm -rf jemalloc-5.2.1
+
+# Actual docker container
+FROM alpine:latest
+MAINTAINER Justin Crawford (Justin@stacksmash.net)
+
+# To create the docker container, run:
+#  docker build -t "shadowhawk_arch:dockerfile" /path/of/dockerfile
+# then to execute the container, run:
+#  docker run --restart always -v $PWD/sessions:/sessions -it shadowhawk_arch:dockerfile
+#
+# Notes:
+# - Remember that the $PWD/sessions folder must exist on the host to allow read/writing of
+#   session data for telegram (or any persistent files)
+# - The config and everything are built-in the docker image upon `docker build` and you
+#   must rebuild the docker image to update the files.
+# - when adding --restart always to the docker run command, it will restart even on reboots
+#   as long as dockerd is enabled in systemd and running at boot.
+# - Use `docker logs --follow <container id>` to view logs or run `docker attach <docker id>`
+#   to attach to the console and use ctrl + P -> ctrl + q to detach.
+# Reference materials
+# - https://docs.docker.com/config/containers/start-containers-automatically/
+# - https://stackoverflow.com/questions/36075525/how-do-i-run-a-docker-instance-from-a-dockerfile
+# - https://stackoverflow.com/questions/19688314/how-do-you-attach-and-detach-from-dockers-process
+# - https://docs.docker.com/engine/reference/commandline/container_start/
+
+COPY --from=builder /usr/local/lib/libjemalloc.so.2 /usr/local/lib/
+COPY bootstrap.shx /usr/local/bin/bootstrap.shx
+COPY update.shx /usr/local/bin/update.shx
+COPY check_git.shx /usr/local/bin/check_git.shx
+COPY wfi-config.json /wfi-config.json
+#Core SPB configs
+ADD acm /etc/acm
+
+# Expose our secret to the build env
+RUN --mount=type=secret,id=GIT_API_KEY cat /run/secrets/GIT_API_KEY
+
+# echo "extension=mongodb" >> /etc/php8/php.ini && echo "extension=gearman.so" >> /etc/php8/php.ini && \
+
+# Build container
+RUN --mount=type=secret,id=GIT_API_KEY \
+    ln -fs /usr/share/zoneinfo/UTC /etc/localtime && \
+    echo http://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
+    echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
+    echo http://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
+    apk --no-cache update && apk --no-cache add php8 php8-gd php8-pear php8-mbstring php8-posix php8-curl php8-json php8-phar php8-tokenizer php8-fileinfo php8-mysqlnd \
+    php8-pdo php8-pdo_mysql php8-mysqli php8-calendar php8-pecl-mongodb php8-pecl-gearman php8-redis redis gearman-dev openssl-dev gearmand git curl logrotate && \
+    ln -sf /usr/bin/php8 /usr/bin/php && ln -sf /usr/bin/pecl8 /usr/bin/pecl && ln -sf /usr/bin/pear8 /usr/bin/pear && \
+    apk add build-base php8-dev && pecl channel-update pecl.php.net && \
+    sed -i 's/^memory_limit = .*$/memory_limit = -1/' /etc/php8/php.ini && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/ppm.git/ -b production --single-branch && cd ppm && \
+    sed -i 's/bash/sh/' install && sed -i 's/sudo//g' install && echo "### Installing PPM ###" &&  \
+    ./install && ppm --github-add-pat --alias="system" --token="$(cat /run/secrets/GIT_API_KEY)" && \
+    cd .. && rm -rf ppm && apk del php8-dev build-base && apk add libgcc libstdc\+\+ && rm /etc/logrotate.conf && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/SpamProtectionBot" --branch="production" || true
+
+# always use jemalloc
+ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
+
+# copy logrotate
+COPY logrotate.conf /etc/logrotate.conf
+
+ENV WAITFORIT_VERSION="v2.4.1"
+RUN curl -o /usr/local/bin/wfi -sSL https://github.com/maxcnunes/waitforit/releases/download/$WAITFORIT_VERSION/waitforit-linux_amd64 && \
+    chmod +x /usr/local/bin/wfi
+
+
+#ENTRYPOINT /bin/bash /usr/local/bin/bootstrap.shx
+CMD ["/bin/sh", "/usr/local/bin/bootstrap.shx"]

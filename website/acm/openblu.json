@@ -1,0 +1,30 @@
+{
+    "file_type": "acm_json",
+    "file_version": "1.0.0.0",
+    "configurations": {
+        "Database": {
+            "Host": "172.17.0.1",
+            "Port": "3306",
+            "Username": "intellivoid",
+            "Password": "",
+            "Name": "openblu"
+        },
+        "RecordDirectory": {
+            "WIN_RecordDirectory": "c:\\openblu\\records",
+            "UNIX_RecordDirectory": "\/var\/vpn_records"
+        }
+    },
+    "schemas": {
+        "Database": {
+            "Host": "localhost",
+            "Port": "3306",
+            "Username": "root",
+            "Password": "",
+            "Name": "openblu"
+        },
+        "RecordDirectory": {
+            "WIN_RecordDirectory": "c:\\openblu\\records",
+            "UNIX_RecordDirectory": "\/var\/vpn_records"
+        }
+    }
+}

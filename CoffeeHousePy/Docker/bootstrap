@@ -1,0 +1,35 @@
+#!/bin/sh
+# Written by Netkas 14/01/2021
+echo "### Initializing CoffeeHouse-Utils! ###"
+
+if [ ! -f /firstrun.pass ]; then
+    echo "(!) First run! Installing resources..."
+
+    echo "Intellivoid Provisioning"
+    echo "Running on x86_64 (docker) [PRODUCTION]"
+    echo " "
+    echo " ## Authentication Required "
+    read -p 'Enter your 25-50 character PAT: ' GIT_API_KEY
+
+    echo " #### Cloning CoffeeHousePy"
+    cd /
+    git clone https://${GIT_API_KEY}@github.com/Intellivoid/CoffeeHousePy.git
+
+    echo " #### Checking out production branch"
+    cd /CoffeeHousePy
+    git checkout production
+
+    echo " #### Setting permissions"
+    chmod a+x /CoffeeHousePy/Docker/coffeehouse
+    chmod a+x /CoffeeHousePy/Docker/installer
+
+    echo " #### Running installer"
+    /bin/bash /CoffeeHousePy/Docker/installer
+
+    echo "(+) Setting boot flag..."
+    touch /firstrun.pass
+    echo "[...] Restarting server in detached mode..."
+else
+    echo "### Starting main execution point"
+    /bin/bash /CoffeeHousePy/Docker/coffeehouse
+fi

@@ -1,0 +1,42 @@
+#!/bin/sh
+echo "awoo"
+
+mkdir -p /tmp
+cd /tmp
+
+echo " Getting path..."
+pwd
+
+#echo " >> Deleting old copies of repo in tmp folder..."
+#rm -rf SpamProtectionBot
+
+#echo " >> Downloading from GitLab..."
+echo " >> Updating SpamProtectionBot from PPM"
+ppm --update --no-propmpt --fix-conflicts
+
+# echo " >> Branch 'production' set."
+# git checkout production
+
+#echo " >> Migrating config if present (if not, will throw error...)"
+#mv /data/ShadowHawk/config.yaml . || exit 1
+
+#echo " >> Wiping partition..."
+#unlink /data/ShadowHawk/sessions
+#rm -rf /data/*
+
+#echo " >> Creating data folder..."
+#mkdir /data/ShadowHawk
+
+#echo " >> Moving ShadowHawk data to partition /data..."
+#mv * /data/ShadowHawk/
+
+#echo " >> Moving Git metadata to ShadowHawk folder..."
+#mv .git /data/ShadowHawk/
+
+#echo " >> Displaying directory info of ShadowHawk..."
+#ls -la /data/ShadowHawk
+
+#echo " >> Linking sessions folder..."
+#ln -sf /sessions /data/ShadowHawk/sessions
+
+echo " << Runtime start OK! Update OK!<<"

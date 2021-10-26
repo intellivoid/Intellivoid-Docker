@@ -1,0 +1,48 @@
+{
+    "file_type": "acm_json",
+    "file_version": "1.0.0.0",
+    "configurations": {
+        "Database": {
+            "Host": "172.17.0.1",
+            "Port": "3306",
+            "Username": "intellivoid",
+            "Password": "",
+            "Name": "coffeehouse"
+        },
+        "CoffeeHouseUtils": {
+            "Host": "172.17.0.4",
+            "PingPort": "5600",
+            "SpamPredictionPort": "5601",
+            "NsfwPredictionPort": "5602",
+            "TranslatePort": "5603",
+            "CoreNlpPort": "5604",
+            "EmotionsPort": "5605",
+            "LanguageDetectionPort": "5606"
+        },
+        "CoffeeHouse": {
+            "TemporaryDirectory": "\/tmp\/coffeehouse"
+        }
+    },
+    "schemas": {
+        "Database": {
+            "Host": "127.0.0.1",
+            "Port": "3306",
+            "Username": "admin",
+            "Password": "admin",
+            "Name": "coffeehouse"
+        },
+        "CoffeeHouseUtils": {
+            "Host": "127.0.0.1",
+            "PingPort": "5600",
+            "SpamPredictionPort": "5601",
+            "NsfwPredictionPort": "5602",
+            "TranslatePort": "5603",
+            "CoreNlpPort": "5604",
+            "EmotionsPort": "5605",
+            "LanguageDetectionPort": "5606"
+        },
+        "CoffeeHouse": {
+            "TemporaryDirectory": "\/tmp\/coffeehouse"
+        }
+    }
+}

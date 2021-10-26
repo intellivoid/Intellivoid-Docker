@@ -1,0 +1,29 @@
+#!/bin/sh
+echo "### Initializing Intellivoid Web 0w0  ###"
+if [ ! -f /firstrun.pass ]; then
+	echo "(!) First run! Installing resources..."
+	#update.shx || exit 1
+	echo "[...] PHP Configuration:"
+	php --ini
+	php -m
+	echo "======================================================================================================="
+	php -i
+	echo "(+) Setting boot flag..."
+	touch /firstrun.pass
+	echo "[...] Restarting server in detached mode..."
+else
+	echo "### Starting Web Services ###"
+	chown -R nobody:nobody /var/log
+	ppm --update
+	if wfi -file=/wfi-config.json -debug; then
+	echo "### Starting Nginx ###"
+	/usr/sbin/nginx -t && /usr/sbin/nginx
+	echo "### Starting PHP-FPM ###"
+	mkdir -p /run/php-fpm/
+	/usr/sbin/php-fpm8 --nodaemonize --allow-to-run-as-root
+		exit 0
+	else
+	sleep 1
+		exit 1
+	fi
+fi

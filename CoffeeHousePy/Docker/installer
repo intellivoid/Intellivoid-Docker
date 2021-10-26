@@ -1,0 +1,18 @@
+#!/bin/bash
+# Written by Netkas 14/01/2021
+cd /CoffeeHousePy
+
+echo " #### Preparing System for Python"
+make system_prep_python
+
+echo " #### Preparing System for pip"
+make system_prep_pip
+
+echo " #### Preparing System for GCC"
+make system_prep_gcc
+
+echo " #### Preparing System for Java"
+make system_prep_java
+
+echo " #### Building and Installing CoffeeHousePy"
+make install_full

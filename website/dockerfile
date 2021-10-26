@@ -1,0 +1,97 @@
+# Create a builder container 
+FROM alpine:latest AS builder
+# Build JEMalloc
+RUN apk add build-base && wget -O - https://github.com/jemalloc/jemalloc/releases/download/5.2.1/jemalloc-5.2.1.tar.bz2 | tar -xj && \
+	cd jemalloc-5.2.1 && ./configure && make -j$(nproc --all) && make install && cd .. && rm -rf jemalloc-5.2.1
+
+
+FROM alpine:latest
+MAINTAINER Justin Crawford (Justin@stacksmash.net)
+
+# To create the docker container, run:
+#  docker build -t "shadowhawk_arch:dockerfile" /path/of/dockerfile
+# then to execute the container, run:
+#  docker run --restart always -v $PWD/sessions:/sessions -it shadowhawk_arch:dockerfile
+#
+# Notes:
+# - Remember that the $PWD/sessions folder must exist on the host to allow read/writing of
+#   session data for telegram (or any persistent files)
+# - The config and everything are built-in the docker image upon `docker build` and you
+#   must rebuild the docker image to update the files.
+# - when adding --restart always to the docker run command, it will restart even on reboots
+#   as long as dockerd is enabled in systemd and running at boot.
+# - Use `docker logs --follow <container id>` to view logs or run `docker attach <docker id>`
+#   to attach to the console and use ctrl + P -> ctrl + q to detach.
+# Reference materials
+# - https://docs.docker.com/config/containers/start-containers-automatically/
+# - https://stackoverflow.com/questions/36075525/how-do-i-run-a-docker-instance-from-a-dockerfile
+# - https://stackoverflow.com/questions/19688314/how-do-you-attach-and-detach-from-dockers-process
+# - https://docs.docker.com/engine/reference/commandline/container_start/
+
+COPY bootstrap.shx /usr/local/bin/bootstrap.shx
+COPY wfi-config.json /wfi-config.json
+
+#Core SPB configs
+ADD acm /etc/acm
+
+# Expose our secret to the build env
+RUN --mount=type=secret,id=GIT_API_KEY cat /run/secrets/GIT_API_KEY
+
+# Build container
+RUN --mount=type=secret,id=GIT_API_KEY \
+    ln -fs /usr/share/zoneinfo/UTC /etc/localtime && \
+    echo http://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
+    echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
+    echo http://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
+    apk --no-cache update && apk --no-cache add php8 php8-gd php8-pear php8-mbstring php8-posix php8-curl php8-json php8-phar php8-tokenizer php8-fileinfo php8-mysqlnd \
+    php8-pdo php8-pdo_mysql php8-mysqli php8-calendar php8-bcmath php8-pecl-mongodb nginx php8-fpm git curl && \
+    ln -sf /usr/bin/php8 /usr/bin/php && ln -sf /usr/bin/pecl8 /usr/bin/pecl && ln -sf /usr/bin/pear8 /usr/bin/pear && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/ppm.git/ && cd ppm && \
+    sed -i 's/bash/sh/' install && sed -i 's/sudo//g' install &&  \
+    ./install && ppm --github-add-pat --alias="system" --token="$(cat /run/secrets/GIT_API_KEY)" && \
+    cd .. && rm -rf ppm && \
+    sed -i 's/^memory_limit = .*$/memory_limit = -1/' /etc/php8/php.ini && \
+    sed -i 's/^expose_php = On$/expose_php = Off/' /etc/php8/php.ini && rm -vrf /etc/nginx/http.d /etc/nginx/nginx.conf && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/acm" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/msqg" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/ZiProto" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/DeepAnalytics" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/OpenBlu" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/Support" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/COASniffle" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/PwCompromission" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/SpamProtection" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/Intellivoid-API" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/CoffeeHouse" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/Intellivoid-Suite-Todo" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/Intellivoid-Accounts" --branch="production" || true && \
+    ppm --fix-conflict --no-prompt --install="system@github/intellivoid/Intellivoid-Subscription-Manager" --branch="production" || true && \
+    rm -rf /var/www/* && mkdir -p /var/www/api.intellivoid.net/ && cd /var/www/ && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/Intellivoid-Accounts-Dashboard.git/ accounts.intellivoid.net && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/Intellivoid-Staff-Dashboard.git/ staff.intellivoid.net && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/CoffeeHouse-Web.git/ coffeehouse.intellivoid.net && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/Intellivoid-Website.git/ intellivoid.net && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/OpenBlu-Web-Application.git/ openblu.intellivoid.net && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/Intellivoid-Documentation.git/ docs.intellivoid.net && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/SpamProtectionAPI.git/ api.intellivoid.net/spamprotection && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/CoffeeHouse-API.git/ api.intellivoid.net/coffeehouse && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/OpenBluAPI.git/ api.intellivoid.net/openblu && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/Intellivoid-Suite-Todo-WebApp.git/ todo.intellivoid.net && \
+    git clone https://$(cat /run/secrets/GIT_API_KEY):x-oauth-basic@github.com/intellivoid/Intellivoid-API-Handler.git/ api.intellivoid.net/intellivoid
+
+# Really make sure nginx's damn configs are gone. This shit is like the fucking clap:
+# You can't get rid of it.
+RUN rm -vrf /etc/nginx/http.d /etc/nginx/nginx.conf
+# Copy the new configs
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY intellivoid.conf /etc/nginx/http.d/intellivoid.conf
+
+# always use jemalloc
+ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
+
+ENV WAITFORIT_VERSION="v2.4.1"
+RUN curl -o /usr/local/bin/wfi -sSL https://github.com/maxcnunes/waitforit/releases/download/$WAITFORIT_VERSION/waitforit-linux_amd64 && \
+    chmod +x /usr/local/bin/wfi
+
+#ENTRYPOINT /bin/bash /usr/local/bin/bootstrap.shx
+CMD ["/bin/sh", "/usr/local/bin/bootstrap.shx"]

@@ -1,0 +1,20 @@
+{
+    "file_type": "acm_json",
+    "file_version": "1.0.0.0",
+    "configurations": {
+        "Endpoint": {
+            "LocalDevelopment": "False",
+            "EnableSSL": "True",
+            "LocalEndpoint": "localhost",
+            "ProductionEndpoint": "accounts.intellivoid.net"
+        }
+    },
+    "schemas": {
+        "Endpoint": {
+            "LocalDevelopment": "False",
+            "EnableSSL": "True",
+            "LocalEndpoint": "http:\/\/localhost",
+            "ProductionEndpoint": "https:\/\/accounts.intellivoid.info"
+        }
+    }
+}

@@ -1,0 +1,37 @@
+#!/bin/sh
+echo "### Initializing SpamProtectionBot 0w0  ###"
+chmod a+x /usr/local/bin/update.shx
+chmod a+x /usr/local/bin/check_git.shx
+if [ ! -f /firstrun.pass ]; then
+	echo "(!) First run! Installing resources..."
+	#mkdir -p /data/SpamProtectionBot
+	#mv /{coffeehouse,deep_analytics,intellivoid_api,spamprotection,spamprotectionbot,telegram_client_manager}.json /etc/acm/
+	update.shx || exit 1
+	echo "[...] PHP Configuration:"
+	php --ini
+	php -m
+	echo "======================================================================================================="
+	php -i
+	echo "(+) Setting boot flag..."
+	touch /firstrun.pass
+	echo "[...] Restarting server in detached mode..."
+else
+	echo "### Starting SpamProtectionBot ###"
+	update.shx
+	if wfi -file=/wfi-config.json -debug; then
+		cd /data/SpamProtectionBot;
+		# Start the various services necessary
+		check_git.shx &
+		echo "### Starting Gearman Process ###"
+		/usr/sbin/gearmand -t 10 -d
+		echo "### Starting Redis Process ###"
+		/usr/bin/redis-server &
+		echo "### Starting Master Process ###"
+		#php $BOTPATH/cli.php
+		ppm --main="net.intellivoid.spam_protection_bot"
+		exit 0
+	else
+	sleep 1
+		exit 1
+	fi
+fi

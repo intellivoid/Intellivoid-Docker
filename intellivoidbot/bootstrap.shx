@@ -1,0 +1,34 @@
+#!/bin/sh
+echo "### Initializing IntellivoidBot 0w0  ###"
+chmod a+x /usr/local/bin/update.shx
+chmod a+x /usr/local/bin/check_git.shx
+if [ ! -f /firstrun.pass ]; then
+	echo "(!) First run! Installing resources..."
+	update.shx || exit 1
+	echo "[...] PHP Configuration:"
+	php --ini
+	php -m
+	echo "======================================================================================================="
+	php -i
+	echo "(+) Setting boot flag..."
+	touch /firstrun.pass
+	echo "[...] Restarting server in detached mode..."
+else
+	echo "### Starting IntellivoidBot ###"
+	update.shx
+	if wfi -file=/wfi-config.json -debug; then
+	# Start the various services necessary
+	check_git.shx &
+	export LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
+	/usr/sbin/gearmand -d
+	echo "### Starting Redis Process ###"
+	/usr/bin/redis-server &
+	# Figure out where the bot is with ppm
+	echo "### Starting Master Process ###"
+	ppm --main="net.intellivoid.intellivoid_bot"
+		exit 0
+	else
+	sleep 1
+		exit 1
+	fi
+fi

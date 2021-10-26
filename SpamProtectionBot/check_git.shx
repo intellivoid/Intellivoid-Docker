@@ -1,0 +1,19 @@
+#!/bin/sh
+
+echo "[SpamProtectionBot-Updater] Starting..."
+while true; do
+	echo "[SpamProtectionBot-Updater] Checking for updates..."
+	changed=0
+	#cd /data/SpamProtectionBot
+	#git remote update && git status -uno | grep -q 'Your branch is behind' && changed=1
+	if [ $changed = 1 ]; then
+		echo "[SpamProtectionBot-Updater] Attempting to terminate processes & starting update..."
+		killall php
+		echo "[SpamProtectionBot-Updater] Killing bootstrap. Restarting updater in DL mode..."
+		exit 0
+	else
+		echo "[SpamProtectionBot-Updater] No updates found. Checking in the next 30 seconds..."
+	fi
+	logrotate -v /etc/logrotate.conf
+	sleep 30
+done

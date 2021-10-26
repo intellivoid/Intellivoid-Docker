@@ -1,0 +1,54 @@
+{
+    "file_type": "acm_json",
+    "file_version": "1.0.0.0",
+    "configurations": {
+        "TelegramService": {
+            "BotName": "SpamProtectionBot",
+            "BotToken": "",
+            "BotEnabled": "true",
+            "WebHook": "http:\/\/localhost",
+            "MaxConnections": "100"
+        },
+        "Database": {
+            "Host": "172.17.0.1",
+            "Port": "3306",
+            "Username": "spamprotection",
+            "Password": "",
+            "Database": "spamprotectionbot"
+        },
+        "BackgroundWorker": {
+            "Host": "127.0.0.1",
+            "Port": "4730",
+            "MaxWorkers": "50"
+        },
+	 "Redis": {
+            "Host": "127.0.0.1",
+            "Port": "6379",
+            "Username": "",
+            "Password": "",
+            "Database": "0"
+        }
+
+    },
+    "schemas": {
+        "TelegramService": {
+            "BotName": "<BOT NAME HERE>",
+            "BotToken": "<BOT TOKEN>",
+            "BotEnabled": "true",
+            "WebHook": "http:\/\/localhost",
+            "MaxConnections": "100"
+        },
+        "BackgroundWorker": {
+            "Host": "127.0.0.1",
+            "Port": "4730",
+            "MaxWorkers": "5"
+        },
+        "Database": {
+            "Host": "127.0.0.1",
+            "Port": "3306",
+            "Username": "root",
+            "Password": "admin",
+            "Database": "telegram"
+        }
+    }
+}

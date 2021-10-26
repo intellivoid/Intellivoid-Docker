@@ -1,0 +1,54 @@
+{
+    "configurations": {
+        "Database": {
+            "Host": "172.17.0.1",
+            "Port": "3306",
+            "Username": "intellivoidbot",
+            "Password": "",
+            "Name": "intellivoid"
+        },
+        "IpStack": {
+            "AccessKey": "",
+            "UseSSL": "false",
+            "IpStackHost": "api.ipstack.com"
+        },
+        "System": {
+            "ProfilesLocation_Unix": "\/etc\/user_pictures",
+            "ProfilesLocation_Windows": "C:\\user_pictures",
+            "AppIconsLocation_Unix": "\/etc\/app_icons",
+            "AppIconsLocation_Windows": "C:\\app_icons"
+        },
+        "TelegramService": {
+            "TgBotName": "IntellivoidBot",
+            "TgBotToken": "",
+            "TgBotEnabled": "true",
+            "TgBotHook": "http:\/\/localhost"
+        }
+    },
+    "schemas": {
+        "Database": {
+            "Host": "localhost",
+            "Port": "3306",
+            "Username": "root",
+            "Password": "",
+            "Name": "intellivoid"
+        },
+        "IpStack": {
+            "AccessKey": "<API KEY>",
+            "UseSSL": "false",
+            "IpStackHost": "api.ipstack.com"
+        },
+        "System": {
+            "ProfilesLocation_Unix": "\/etc\/user_pictures",
+            "ProfilesLocation_Windows": "C:\\user_pictures",
+            "AppIconsLocation_Unix": "\/etc\/app_icons",
+            "AppIconsLocation_Windows": "C:\\app_icons"
+        },
+        "TelegramService": {
+            "TgBotName": "IntellivoidBot",
+            "TgBotToken": "<BOT TOKEN>",
+            "TgBotEnabled": "true",
+            "TgBotHook": "http:\/\/localhost"
+        }
+    }
+}

@@ -1,0 +1,96 @@
+#!/bin/sh
+# Written by Netkas 14/01/2021
+cd /CoffeeHousePy
+
+echo "### Checking for updates ###"
+git remote update
+
+#UPSTREAM=${1:-'@{u}'}
+#LOCAL=$(git rev-parse @)
+#BASE=$(git merge-base @ "$UPSTREAM")
+
+#if [ $LOCAL = $BASE ]; then
+#  echo "### Applying update ###"
+#  git pull
+#  make clean install
+#fi
+
+changed=0
+git remote update && git status -uno | grep -q 'Your branch is behind' && changed=1
+if [ $changed = 1 ]; then
+  echo "### Applying update ###"
+  git pull
+  make clean install
+else
+  echo "### CoffeeHouse-Utils is up-to-date ###"
+fi
+
+echo "### Starting CoffeeHouse-LangDetect ###"
+make start_langdetect &
+echo "### Starting CoffeeHouse-SpamDetect ###"
+make start_spamdetect &
+echo "### Starting CoffeeHouse-CoreNLP ###"
+make start_corenlp &
+echo "### Starting CoffeeHouse-NSFW ###"
+make start_nsfw &
+echo "### Starting CoffeeHouse-Emotions ###"
+make start_emotions &
+
+echo "### Checking Service Status ###"
+
+if ! python3 scripts/warmup.py; then
+  echo "ERROR: Some services failed to start successfully during the warmup process"
+  exit 1
+fi
+
+echo "### Starting Ping Service ###"
+make start_ping &
+
+while sleep 60; do
+
+  # If grep find anything, they exit with 0 status
+  # If they are not 0, then something is wrong
+
+  ps aux | grep coffeehouse_languagedetection | grep -q -v grep
+  LANGDETECT_STATUS=$?
+  if [ $LANGDETECT_STATUS -ne 0 ]; then
+    echo "ERROR: coffeehouse_languagedetection has been terminated, terminating container."
+    exit 1
+  fi
+
+  ps aux | grep coffeehouse_spamdetection | grep -q -v grep
+  SPAMDETECT_STATUS=$?
+  if [ $SPAMDETECT_STATUS -ne 0 ]; then
+    echo "ERROR: coffeehouse_spamdetection has been terminated, terminating container."
+    exit 1
+  fi
+
+  ps aux | grep coffeehouse_nsfw | grep -q -v grep
+  NSFW_STATUS=$?
+  if [ $NSFW_STATUS -ne 0 ]; then
+    echo "ERROR: coffeehouse_nsfw has been terminated, terminating container."
+    exit 1
+  fi
+
+  ps aux | grep coffeehouse_emotions | grep -q -v grep
+  EMOTION_STATUS=$?
+  if [ $EMOTION_STATUS -ne 0 ]; then
+    echo "ERROR: coffeehouse_emotions has been terminated, terminating container."
+    exit 1
+  fi
+
+  ps aux | grep coffeehouse_ping | grep -q -v grep
+  PING_STATUS=$?
+  if [ $PING_STATUS -ne 0 ]; then
+    echo "ERROR: coffeehouse_ping has been terminated, terminating container."
+    exit 1
+  fi
+
+  ps aux | grep edu.stanford.nlp.pipeline.StanfordCoreNLPServer | grep -q -v grep
+  CORENLP_STATUS=$?
+  if [ $CORENLP_STATUS -ne 0 ]; then
+    echo "ERROR: coffeehouse_corenlp has been terminated, terminating container."
+    exit 1
+  fi
+
+done
